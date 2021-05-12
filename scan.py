@@ -4,6 +4,7 @@ import base64
 import json
 import sys
 import threading
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -13,7 +14,7 @@ URL_REGEX = r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}
 
 GITHUB_SEARCH_API = 'https://api.github.com/search/code?q='
 START_PAGE_NUMBER = 1
-SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock+NOT+extension%3Ac+NOT+extension%3Acpp+NOT+extension%3Ah+NOT+extension%3Acctype=Code&page='
+SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock&type=Code&page='
 REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 GH_RESULTS_PER_PAGE = 30
 GH_TOKEN = None
@@ -82,36 +83,42 @@ def _is_broken_link(url):
 
 def _get_url_result(url, token):
 
-    headers = {}    
+    try: 
 
-    if not token and GH_TOKEN:
-        token = GH_TOKEN
+        headers = {}    
 
-    if token:
-        headers['Authorization'] = f'token {token}'
+        if not token and GH_TOKEN:
+            token = GH_TOKEN
 
-    _print(headers)
+        if token:
+            headers['Authorization'] = f'token {token}'
 
-    response = requests.get(url, headers=headers)
+        _print(headers)
 
-    # if rate limit reached
-    # Check and wait for x seconds
-    if response.status_code == 403:
-        if _check_rate_limit(response):
-            response = requests.get(url)
+        response = requests.get(url, headers=headers)
 
-    if response.status_code != 200:
-        _print(f'Failed with error code {response.status_code}')
-        return {}
-        
-    return response.json()
+        # if rate limit reached
+        # Check and wait for x seconds
+        if response.status_code == 403:
+            if _check_rate_limit(response):
+                response = requests.get(url)
+
+        if response.status_code != 200:
+            _print(f'Failed with error code {response.status_code}')
+            return {}
+            
+        return response.json()
+    except Exception as e:
+        print(f'Error calling api {url}')
+        _print(e)
+        return
 
 def _get_total_pages(url, gh_token):
 
     result = _get_url_result(f'{url}{START_PAGE_NUMBER}', gh_token)
 
     total_count = 1
-    if 'total_count' in result:
+    if result and 'total_count' in result:
         total_count = result['total_count']
 
     if total_count > GH_RESULTS_PER_PAGE:
@@ -124,7 +131,12 @@ def _get_total_pages(url, gh_token):
 
 
 def _decode_base_64(text): 
-    return base64.b64decode(text).decode("utf-8") 
+    try:
+        return base64.b64decode(text).decode("utf-8") 
+    except Exception as e:
+        print('Error decoding')
+        _print(e)
+        return
 
 
 def _write_to_file(line, fname=None):
@@ -162,6 +174,9 @@ def _search_content(url, content):
     result = _decode_base_64(content)
     _print(str(result))
 
+    if not result:
+        return
+
     print_line = f'[{_get_current_datetime()}] Scanning for {url}'
     print(print_line)
     _write_to_file(print_line, 'process')
@@ -188,6 +203,9 @@ def _is_archived(item, gh_token):
 
         repo = _get_url_result(repo_url, gh_token)
 
+        if not repo:
+            return False
+
         if 'archived' in repo:
             _print(f'{repo["name"]} => Archieved => {str(repo["archived"])}')
             return repo['archived']
@@ -207,7 +225,7 @@ def _get_and_search_content(item, gh_token):
         result = _get_url_result(item['url'], gh_token)
         html_url = item['html_url']
 
-        if 'content' in result:
+        if result and 'content' in result:
             _search_content(html_url, result['content'])
 
 def run(url, page_number, gh_token):
@@ -216,15 +234,17 @@ def run(url, page_number, gh_token):
     print(page_url)
     result = _get_url_result(page_url, gh_token)
 
-    if 'items' in result:
+    if result and 'items' in result:
         items = result['items']
 
         for item in items:
 
-            t1 = threading.Thread(target=_get_and_search_content, args=(item,gh_token))
-            t1.daemon = True
-            t1.start()
-            t1.join()
+            _get_and_search_content(item, gh_token)
+
+            # t1 = threading.Thread(target=_get_and_search_content, args=(item,gh_token))
+            # t1.daemon = True
+            # t1.start()
+            # t1.join()
 
 # MAIN CODE
 
@@ -239,9 +259,10 @@ total_pages = _get_total_pages(url, gh_token)
 
 for page_number in range(START_PAGE_NUMBER, total_pages):
 
-    t = threading.Thread(target=run, args=(url, page_number, gh_token))
-    t.daemon = True
-    t.start()
-    t.join()
+    run(url, page_number, gh_token)
+    # t = threading.Thread(target=run, args=(url, page_number, gh_token))
+    # t.daemon = True
+    # t.start()
+    # t.join()
 
 
