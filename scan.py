@@ -14,9 +14,11 @@ URL_REGEX = r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}
 
 GITHUB_SEARCH_API = 'https://api.github.com/search/code?q='
 START_PAGE_NUMBER = 1
-SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock&type=Code&page='
+SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock+NOT&type=Code&page='
 REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+FILTER_TAGS = [ 'github.com', 'bitbucket.org', 'atlassian.net', 'amazonaws.com', 'herokuapp.com', 'netlify.app', 'storage.googleapis.com', 'zendesk.com', 'fastly.net', 'readme.io', 'myshopify.com', 'surge.sh', 'mystrikingly.com']
 GH_RESULTS_PER_PAGE = 30
+GH_MAX_PAGES = 34 # Max 1000 results get be pulled from API 30 * 34
 GH_TOKEN = None
 DEBUG = False
 
@@ -56,20 +58,55 @@ def _get_gh_token():
     return args[2]
 
 def _check_rate_limit(response):
-    if response.status_code == 403:
-        if 'X-RateLimit-Reset' in response.headers:
-            reset_time = int(response.headers['X-RateLimit-Reset'])
-            current_time = int(time.time())
-            sleep_time = reset_time - current_time + 1
-            print(f'\n\nGitHub Search API rate limit reached. Sleeping for {sleep_time} seconds.\n\n')
-            time.sleep(sleep_time)
+    if 'X-RateLimit-Remaining' in response.headers:
+        limit_remaining = int(response.headers['X-RateLimit-Remaining'])
+        print(f'Rate limit remaining {limit_remaining}')
+        
+        if limit_remaining > 0:
             return True
-    
-    return False
 
+    if 'X-RateLimit-Reset' in response.headers:
+        reset_time = int(response.headers['X-RateLimit-Reset'])
+        print(reset_time)
+        current_time = int(time.time())
+        sleep_time = reset_time - current_time + 1
+        print(f'\n\nGitHub Search API rate limit reached. Sleeping for {sleep_time} seconds.\n\n')
+        time.sleep(sleep_time)
+        return True
+
+    return True
+
+def _clean_url(url):
+    # Removes single quote (')
+    url = url.replace('\'', '')
+    # Removes double quote (")
+    url = url.replace('"', '')
+    # Removes &quote
+    url = url.replace('&quot', '')
+    # Removes (\)
+    url = url.replace('\\', '')
+
+    # Remove dot(.) at the end of url
+    if url.endswith('.'):
+        url = url[:len(url)-1]
+
+    # Removes (..) at the start of url
+    if url.startswith('..'):
+        url = url[2:]
+
+    # Removes (/..) at the start of url
+    if url.startswith('/..'):
+        url = url[3:]
+
+    # Removes single (/) (if exist) from the start of url
+    if url.startswith('/') and not url.startswith('//'):
+        url = url[1:]
+
+    return url
 
 def _is_broken_link(url):
     try:
+        url = _clean_url(url)
         response = requests.head(url, headers=REQUEST_HEADERS, timeout=10)
         if response.status_code == 404:
             return True
@@ -85,7 +122,7 @@ def _get_url_result(url, token):
 
     try: 
 
-        headers = {}    
+        headers = REQUEST_HEADERS
 
         if not token and GH_TOKEN:
             token = GH_TOKEN
@@ -96,6 +133,8 @@ def _get_url_result(url, token):
         _print(headers)
 
         response = requests.get(url, headers=headers)
+        _print(url)
+        _print(response)
 
         # if rate limit reached
         # Check and wait for x seconds
@@ -168,6 +207,13 @@ def _is_file_exists(file_path):
 def _get_current_datetime():
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+def _is_required_url(url):
+    for value in FILTER_TAGS:
+        if value in url:
+            return True
+    
+    return False
+
 def _search_content(url, content):
 
     _print(content)
@@ -177,25 +223,32 @@ def _search_content(url, content):
     if not result:
         return
 
-    print_line = f'[{_get_current_datetime()}] Scanning for {url}'
-    print(print_line)
-    _write_to_file(print_line, 'process')
+    if 'example' not in url and 'test' not  in url and 'mock' not in url and 'sample' not in url and _is_valid_url(url):
 
-    if 'example' not in url and 'test' not  in url and 'mock' not in url and 'sample' not in url:
         matches = [x.group() for x in re.finditer(URL_REGEX, result)]
+
         for i in range(0, len(matches)):
+
             matched_url = matches[i]
-            _print(f'Processing {matched_url}')
-            if _is_broken_link(matched_url):
-                print_line = f'|-BROKEN-| {matched_url}'
-                print(print_line)
-                _write_to_file(matched_url, 'broken')
-                _write_to_file(print_line, 'process')
-            else:
-                print_line = f'|---OK---| {matched_url}'
-                print(print_line)
-                _write_to_file(matched_url, 'output')
-                _write_to_file(print_line, 'process')
+            print_line = f'[{_get_current_datetime()}] Processing for {matched_url}'
+            print(print_line)
+            _write_to_file(print_line, 'process')
+
+            if _is_required_url(matched_url):
+
+                if _is_broken_link(matched_url):
+
+                    print_line = f'|-BROKEN-| {matched_url}'
+                    print(print_line)
+                    _write_to_file(matched_url, 'broken')
+                    _write_to_file(print_line, 'process')
+
+                else:
+                    print_line = f'|---OK---| {matched_url}'
+                    print(print_line)
+                    _write_to_file(matched_url, 'output')
+                    _write_to_file(print_line, 'process')
+                    
 
 def _is_archived(item, gh_token):
     if 'repository' in item and 'url' in item['repository']:
@@ -215,12 +268,25 @@ def _is_archived(item, gh_token):
 
     return False
 
+def _is_valid_url(url):
+    if not url:
+        return False
+
+    if url.endswith('sql'):
+        return False
+
+    return True
+
 def _get_and_search_content(item, gh_token):
 
     if _is_archived(item, gh_token):
         return
 
-    if 'url' in item:
+    if 'url' in item and _is_valid_url(item['url']):
+
+        print_line = f'[{_get_current_datetime()}] Scanning for {item["url"]}'
+        print(f'{print_line}')
+        _write_to_file(print_line, 'process')
 
         result = _get_url_result(item['url'], gh_token)
         html_url = item['html_url']
@@ -256,6 +322,8 @@ url = _get_url(user)
 
 total_urls = 0
 total_pages = _get_total_pages(url, gh_token)
+if total_pages > GH_MAX_PAGES:
+    total_pages = GH_MAX_PAGES
 
 for page_number in range(START_PAGE_NUMBER, total_pages):
 
