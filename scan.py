@@ -14,8 +14,9 @@ URL_REGEX = r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}
 
 GITHUB_SEARCH_API = 'https://api.github.com/search/code?q='
 START_PAGE_NUMBER = 1
-SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock+NOT&type=Code&page='
+SEARCH_QUERY = 'user%3A{}+NOT+test+NOT+example+NOT+sample+NOT+mock&type=Code&page='
 REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+FILTER_ENABLE = False
 FILTER_TAGS = [ 'github.com', 'bitbucket.org', 'atlassian.net', 'amazonaws.com', 'herokuapp.com', 'netlify.app', 'storage.googleapis.com', 'zendesk.com', 'fastly.net', 'readme.io', 'myshopify.com', 'surge.sh', 'mystrikingly.com']
 GH_RESULTS_PER_PAGE = 30
 GH_MAX_PAGES = 34 # Max 1000 results get be pulled from API 30 * 34
@@ -208,6 +209,9 @@ def _get_current_datetime():
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def _is_required_url(url):
+    if not FILTER_ENABLE:
+        return True
+
     for value in FILTER_TAGS:
         if value in url:
             return True
