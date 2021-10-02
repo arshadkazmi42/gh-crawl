@@ -1,6 +1,8 @@
 import requests
 
 
+DEFAULT_REQUEST_TIMEOUT = 40
+
 class Request:
 
     def __init__(self, url):
@@ -8,11 +10,6 @@ class Request:
         self.url = url
 
     
-    def get(self):
+    def get(self, headers, timeout=DEFAULT_REQUEST_TIMEOUT):
 
-        return requests.get(self.url)
-
-    
-    def head(self):
-
-        return requests.head(self.url)
+        return requests.get(self.url, headers=headers, timeout=timeout)
