@@ -1,3 +1,5 @@
+from github_search_result_item import GithubSearchResultItem
+
 GH_RESULTS_PER_PAGE = 30
 GH_MAX_PAGES = 34
 
@@ -34,9 +36,20 @@ class GithubResponseParser:
 
         search_results = self.response.json()
 
-    
-    # def get_archived_response(self):
+        return [GithubSearchResultItem(result) for result in search_results]
 
-    #     if repo and 'archived' in repo:
-    #         _print(f'{repo["name"]} => Archieved => {str(repo["archived"])}')
-    #         return repo['archived']
+
+    def get_page_content(self):
+
+        if 'content' not in self.response:
+            return None
+
+        return self.response['content']
+
+    
+    def get_archived_information(self):
+
+        if not self.response or 'archived' not in self.response:
+            return None
+
+        return self.response['archived']

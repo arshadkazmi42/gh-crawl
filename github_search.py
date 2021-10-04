@@ -39,3 +39,12 @@ class GithubSearch:
 
         github_response_parser = GithubResponseParser(response)
         return github_response_parser.get_search_results()
+
+
+    def page_content_result(self):
+
+        request_process = RequestProcess(self.url)
+        response = request_process.get()
+
+        github_response_parser = GithubResponseParser(response)
+        return github_response_parser.get_page_content()
