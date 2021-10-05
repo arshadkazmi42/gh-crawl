@@ -2,6 +2,9 @@ import base64
 import re
 
 
+from fyle import Fyle
+
+
 DECODE_FORMAT = 'utf-8'
 # TODO Make it configurable
 # URL_REGEX = r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)'
@@ -12,6 +15,8 @@ DELIMITER = '\n'
 class SearchContent:
 
     def __init__(self, content):
+
+        self.fyle = Fyle()
 
         self.content = self.decode_base64(content)
         self.matches = []
@@ -32,6 +37,8 @@ class SearchContent:
             url = iterator.group()
             if url not in self.matches:
 
+                print(f'Found {url}')
+                self.fyle.write(url)
                 self.matches.append(url)
 
         return self.matches

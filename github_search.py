@@ -21,6 +21,11 @@ class GithubSearch:
         return f'{API}{searchQuery}'
 
 
+    def get_url(self):
+
+        return self.url
+
+
     def result_total_pages(self):
 
         request_process = RequestProcess(self.url)
