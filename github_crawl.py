@@ -47,6 +47,8 @@ class GithubCrawl:
     def process_page(self, page_number):
 
         results = self.github_search.page_result(page_number)
+        if not results:
+            return None
 
         pool = Pool(MAX_THREADS)
 
