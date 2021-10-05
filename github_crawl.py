@@ -37,9 +37,11 @@ class GithubCrawl:
         self.total_pages = self.github_search.result_total_pages()
         self.url = self.github_search.get_url()
 
+        print(f'\n\nTotal Pages: {self.total_pages}')
+
         for page_number in range(START_PAGE_NUMBER, self.total_pages):
     
-            print(f'\n\nProcessing: {self.url}\nPage number: {page_number}\n')
+            print(f'\nProcessing: {self.url}\nPage number: {page_number}\n')
 
             self.process_page(page_number)
 
