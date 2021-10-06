@@ -2,6 +2,7 @@ from github_search_result_item import GithubSearchResultItem
 
 GH_RESULTS_PER_PAGE = 30
 GH_MAX_PAGES = 34
+GH_DEFAULT_PAGES_COUNT = 2
 
 
 class GithubResponseParser:
@@ -18,18 +19,20 @@ class GithubResponseParser:
         # If total results are less than the total results in one page
         # Return 2, since page_numbers starts with 1.
         # So it needs to do 1 iteration
-        total_count = 2
+        total_pages = GH_DEFAULT_PAGES_COUNT
+
+        if not response or 'total_count' not in response:
+            return 0
         
-        if response and 'total_count' in response:
-            total_count = response['total_count']
+        total_count = response['total_count']
 
         if total_count > GH_RESULTS_PER_PAGE:
-            total_count = int(total_count / GH_RESULTS_PER_PAGE) + 1
+            total_pages = int(total_count / GH_RESULTS_PER_PAGE) + 1
 
-        if total_count > GH_MAX_PAGES:
+        if total_pages > GH_MAX_PAGES:
             return GH_MAX_PAGES
 
-        return total_count
+        return total_pages
 
 
     def get_search_results(self):
