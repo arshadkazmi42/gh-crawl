@@ -30,7 +30,7 @@ class SearchContent:
 
     def format_regex(self):
         
-        return URL_REGEX_START + self.search_query + URL_REGEX_END
+        return URL_REGEX_START + re.escape(self.search_query) + URL_REGEX_END
 
 
     def decode_base64(self, content):
