@@ -9,7 +9,6 @@ from request_process import RequestProcess
 from search_content import SearchContent
 
 
-DEFAULT_QUERY = 'github.com'
 MAX_THREADS = 5
 START_PAGE_NUMBER = 1
 
@@ -20,7 +19,7 @@ class GithubCrawl:
 
         self.arguments = Arguments()
         self.organization = self.arguments.get_organization()
-        self.query = DEFAULT_QUERY
+        self.query = self.arguments.get_search_query()
 
         self.fyle = Fyle()
         self.process_timer = ProcessTimer()

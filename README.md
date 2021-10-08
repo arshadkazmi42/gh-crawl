@@ -38,3 +38,4 @@ python3 scan.py $1 {REPLACE_WITH_GITHUB_TOKEN}
 
 cat $1.txt | awk -F[/] '{print $1"//"$3"/"$4}' | sort | uniq | xargs -I {} sh ../bash-scripts/curl/scan-broken.sh {}
 ```
+
