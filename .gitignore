@@ -3,6 +3,9 @@
 *_broken.txt
 *_process.txt
 run.sh
+broken.sh
+results/
+target.list
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
