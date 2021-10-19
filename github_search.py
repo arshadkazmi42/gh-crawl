@@ -4,7 +4,7 @@ from sleep import Sleep
 
 
 API = 'https://api.github.com/search/code?o=desc&q='
-SEARCH_QUERY = 'org%3A{}+"{}"&type=Code'
+SEARCH_QUERY = 'org%3A{}+"{}"+NOT+filename:CHANGELOG.md+NOT+filename:Changelog&type=Code'
 
 
 class GithubSearch:
