@@ -24,8 +24,9 @@ class RequestProcess:
 
         if response.status_code == 429:
 
-            self.sleep.start()
-            return self.get(headers, timeout)
+            if self.is_wait_limit(response):
+
+                return self.get(headers, timeout)
 
         if response.status_code == 403:
 
@@ -45,6 +46,19 @@ class RequestProcess:
             headers['Authorization'] = f'token {github_token}'
 
         return headers
+
+
+    def is_wait_limit(self, response):
+
+        sleep_time = None
+
+        if 'Retry-After' in response.headers:
+
+            sleep_time = int(response.headers['Retry-After'])
+
+        self.sleep.start(sleep_time)
+
+        return False
 
 
     def is_github_ratelimit(self, response):
