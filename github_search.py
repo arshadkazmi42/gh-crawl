@@ -4,20 +4,20 @@ from sleep import Sleep
 
 
 API = 'https://api.github.com/search/code?o=desc&q='
-SEARCH_QUERY = 'org%3A{}+"{}"+NOT+filename:CHANGELOG.md+NOT+filename:Changelog+NOT+filename:CHANGES.md+NOT+filename:COMMITTERS.md+NOT+filename:CONTRIBUTORS.md+NOT+filename:contributors.rst&type=Code'
+SEARCH_QUERY = 'org%3A{}+"{}"+"ednapiranha"+NOT+filename:CHANGELOG.md+NOT+filename:Changelog+NOT+filename:CHANGES.md+NOT+filename:COMMITTERS.md+NOT+filename:CONTRIBUTORS.md+NOT+filename:contributors.rst+NOT+filename:go.sum+size%3A{}..{}&type=Code'
 
 
 class GithubSearch:
 
-    def __init__(self, user, query):
+    def __init__(self, user, query, size_start, size_end):
 
-        self.url = self.format_url(user, query)
+        self.url = self.format_url(user, query, size_start, size_end)
         self.sleep = Sleep()
 
 
-    def format_url(self, user, query):
+    def format_url(self, user, query, size_start, size_end):
 
-        searchQuery = SEARCH_QUERY.format(user, query)
+        searchQuery = SEARCH_QUERY.format(user, query, size_start, size_end)
         return f'{API}{searchQuery}'
 
 

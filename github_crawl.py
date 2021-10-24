@@ -15,7 +15,10 @@ START_PAGE_NUMBER = 1
 
 class GithubCrawl:
 
-    def __init__(self):
+    def __init__(self, size_start, size_end):
+
+        self.size_start = size_start
+        self.size_end = size_end
 
         self.arguments = Arguments()
         self.organization = self.arguments.get_organization()
@@ -23,7 +26,7 @@ class GithubCrawl:
 
         self.fyle = Fyle()
         self.process_timer = ProcessTimer()
-        self.github_search = GithubSearch(self.organization, self.query)
+        self.github_search = GithubSearch(self.organization, self.query, self.size_start, self.size_end)
 
 
     def get_elapsed_minutes(self):
