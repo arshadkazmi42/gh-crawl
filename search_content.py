@@ -6,10 +6,12 @@ from arguments import Arguments
 from fyle import Fyle
 
 
+GIT_PROTOCOL = 'git://'
+HTTPS_PROTOCOL = 'https://'
 DECODE_FORMAT = 'utf-8'
 # TODO Make it configurable
 # URL_REGEX = r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)'
-URL_REGEX_START = r'https?:\/\/(www\.)?'
+URL_REGEX_START = r'(git|https?):\/\/(www\.)?'
 URL_REGEX_END = r'\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)'
 DELIMITER = '\n'
 
@@ -48,6 +50,9 @@ class SearchContent:
 
             url = iterator.group()
             if url not in self.matches:
+
+                if GIT_PROTOCOL in url:
+                    url = url.replace(GIT_PROTOCOL, HTTPS_PROTOCOL)
 
                 print(f'Found {url}')
                 self.fyle.write(url)
