@@ -89,12 +89,12 @@ class SearchContent:
         return DELIMITER.join(self.matches)
 
     
-    def format_url(url):
+    def format_url(self, url):
 
         if not url.startswith(HTTP):
             url = f'{HTTPS_PROTOCOL}{url}'
 
         if url.startswith(RAW_GITHUB_URL):
-            url = url.replace(RAW_GITHUB_URL, GITHUBB_URL)
+            url = url.replace(RAW_GITHUB_URL, GITHUB_URL)
 
         return url
