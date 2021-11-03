@@ -53,7 +53,7 @@ class Arguments:
 
     def get_organization(self):
 
-        self.organization
+        return self.organization
 
 
     def get_github_token(self):
@@ -63,4 +63,4 @@ class Arguments:
     
     def get_search_query(self):
 
-        self.search_query
+        return self.search_query
