@@ -4,7 +4,7 @@ from sleep import Sleep
 
 
 API = 'https://api.github.com/search/code?o=desc&q='
-SEARCH_QUERY = 'org%3A{}+"{}"+NOT+filename:CHANGELOG.md+NOT+filename:Changelog+NOT+filename:CHANGES.md+NOT+filename:COMMITTERS.md+NOT+filename:CONTRIBUTORS.md+NOT+filename:contributors.rst&type=Code'
+SEARCH_QUERY = 'org%3A{}+{}+NOT+filename:CHANGELOG.md+NOT+filename:Changelog+NOT+filename:CHANGES.md+NOT+filename:COMMITTERS.md+NOT+filename:CONTRIBUTORS.md+NOT+filename:contributors.rst&type=Code'
 
 
 class GithubSearch:
@@ -30,7 +30,6 @@ class GithubSearch:
 
         request_process = RequestProcess(self.url)
         response = request_process.get()
-
         github_response_parser = GithubResponseParser(response)
         return github_response_parser.get_search_pages_count()
 
