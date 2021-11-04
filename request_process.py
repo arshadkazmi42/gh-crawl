@@ -30,6 +30,8 @@ class RequestProcess:
 
         if response.status_code == 403:
 
+            self.print_error_message(response)
+
             if self.is_github_ratelimit(response):
 
                 return self.get(headers, timeout)
@@ -72,6 +74,16 @@ class RequestProcess:
                 reset_time = int(response.headers['X-RateLimit-Reset'])
                 current_time = int(time.time())
                 sleep_time = reset_time - current_time + 1
+
                 return self.sleep.start(sleep_time)
                         
-        return self.sleep.start()
+        return False
+
+
+    def print_error_message(self, response):
+
+        error_resopnse = response.json()
+
+        if 'message' in error_response:
+            
+            print(error_resopnse['message'])
